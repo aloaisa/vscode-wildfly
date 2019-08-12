@@ -174,9 +174,9 @@ export class WildflyController {
             }
             server.needRestart = restart;
 
-            let extension = 'bat';
-            if (process.platform === 'darwin') {
-                extension = 'sh'
+            let extension = 'sh';
+            if (process.platform === 'win32') {
+                extension = 'bat'
             }
 
             const initScript = '\"' + path.join(server.getStoragePath(), '/bin/jboss-cli.' + extension + '\"');
@@ -443,9 +443,9 @@ export class WildflyController {
 
             let startArguments: string[] = serverInfo.jvmOptions.slice();
 
-            let extension = 'bat';
-            if (process.platform === 'darwin') {
-                extension = 'sh'
+            let extension = 'sh';
+            if (process.platform === 'win32') {
+                extension = 'bat'
             }
 
             const initScript = '\"' + path.join(serverInfo.getStoragePath(), '/bin/standalone.' + extension) + '\"';
