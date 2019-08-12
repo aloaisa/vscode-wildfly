@@ -75,8 +75,10 @@ export class WildflyController {
 
     public revealWarPackage(warPackage: WarPackage): void {
         if (warPackage) {
-            opn(warPackage.storagePath + '.war');
+            opn(path.dirname(warPackage.storagePath + '.war'));
         }
+
+
     }
 
     public async addServer(): Promise<WildflyServer> {
