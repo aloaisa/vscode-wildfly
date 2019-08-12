@@ -75,7 +75,7 @@ export class WildflyController {
 
     public revealWarPackage(warPackage: WarPackage): void {
         if (warPackage) {
-            opn(warPackage.storagePath);
+            opn(warPackage.storagePath + '.war');
         }
     }
 
@@ -171,7 +171,13 @@ export class WildflyController {
                 server.clearDebugInfo();
             }
             server.needRestart = restart;
-            const initScript = '\"' + path.join(server.getStoragePath(), '/bin/jboss-cli.sh\"');
+
+            let extension = 'bat';
+            if (process.platform === 'darwin') {
+                extension = 'sh'
+            }
+
+            const initScript = '\"' + path.join(server.getStoragePath(), '/bin/jboss-cli.' + extension + '\"');
             let stopParameters = ["--connect"];
             if (restart) {
                 stopParameters.push("command=:reload");
@@ -363,7 +369,9 @@ export class WildflyController {
             await fse.mkdirs(deploymentsDirectory);
 
             const warFile = path.basename(webappPath);
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'cp', { shell: true }, '\"' + webappPath + '\"', '\"' + deploymentsDirectory + warFile + '\"');
+
+            await fse.copy(webappPath, deploymentsDirectory + warFile );
+            //await Utility.executeCMD(this._outputChannel, server.getName(), 'cp', { shell: true }, '\"' + webappPath + '\"', '\"' + deploymentsDirectory + warFile + '\"');
         } else {
             Utility.trackTelemetryStep('no war file');
             throw new Error(DialogMessage.invalidWarFile);
