@@ -17,6 +17,7 @@ import { Utility } from "../Utility";
 import { WildflyModel } from "./WildflyModel";
 import { WildflyServer } from "./WildflyServer";
 import { WarPackage } from "./WarPackage";
+import { JVM_OPTION_FILE } from "../Constants";
 
 export class WildflyController {
     private _outputChannel: vscode.OutputChannel;
@@ -41,7 +42,7 @@ export class WildflyController {
 
     public async openServerConfig(wildflyServer: WildflyServer): Promise<void> {
         if (wildflyServer) {
-            const configFile: string = wildflyServer.getServerConfigPath();
+            const configFile: string = await wildflyServer.getServerConfigPath();
             if (!await fse.pathExists(configFile)) {
                 Utility.trackTelemetryStep('no configuration');
                 throw new Error(DialogMessage.noServerConfig);
@@ -133,7 +134,7 @@ export class WildflyController {
     public async customizeJVMOptions(wildflyServer: WildflyServer): Promise<void> {
         if (wildflyServer) {
             if (!await fse.pathExists(wildflyServer.jvmOptionFile)) {
-                await fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(wildflyServer.getStoragePath(), 'jvm.options'));
+                await fse.copy(path.join(this._extensionPath, 'resources', JVM_OPTION_FILE), path.join(wildflyServer.getStoragePath(), JVM_OPTION_FILE));
             }
             Utility.openFile(wildflyServer.jvmOptionFile);
         }
@@ -404,7 +405,7 @@ export class WildflyController {
     private async startWildfly(serverInfo: WildflyServer): Promise<void> {
         const serverName: string = serverInfo.getName();
         let watcher: chokidar.FSWatcher;
-        const serverConfig: string = serverInfo.getServerConfigPath();
+        const serverConfig: string = await serverInfo.getServerConfigPath();
         const serverPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Server);
         const httpPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Http);
         const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
@@ -494,7 +495,7 @@ export class WildflyController {
         }
 
         Utility.trackTelemetryStep('get http port');
-        const httpPort: string = await Utility.getPort(wildflyServer.getServerConfigPath(), Constants.PortKind.Http);
+        const httpPort: string = await Utility.getPort(await wildflyServer.getServerConfigPath(), Constants.PortKind.Http);
         Utility.trackTelemetryStep('browse server');
         const url = new URL(`${Constants.LOCALHOST}:${httpPort}`).toString() + wildflyServer.getBaseUrlContext();
         opn(url);

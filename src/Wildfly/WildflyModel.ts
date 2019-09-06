@@ -44,22 +44,10 @@ export class WildflyModel {
     public async updateJVMOptions(serverName: string) : Promise<void> {
         const server: WildflyServer = this.getWildflyServer(serverName);
         let result: string[] = [];
-        const filterFunction: (para: string) => boolean = (para: string): boolean => {
-            if (!para.startsWith('-')) {
-                return false;
-            }
-            let valid: boolean = true;
-            Constants.JVM_DEFAULT_OPTIONS_KEYS.forEach((key: string) => {
-                if (para.startsWith(key)) {
-                    valid = false;
-                    return;
-                }
-            });
-            return valid;
-        };
-        result = result.concat(await Utility.readFileLineByLine(server.jvmOptionFile, filterFunction));
+        result = result.concat(await Utility.readFileLineByLine(server.jvmOptionFile, server.filterFunction));
         server.jvmOptions = result;
     }
+
     public deleteServer(wildflyServer: WildflyServer): boolean {
         const index: number = this._serverList.findIndex((item: WildflyServer) => item.getName() === wildflyServer.getName());
         if (index > -1) {
