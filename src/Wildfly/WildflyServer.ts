@@ -14,9 +14,6 @@ export class WildflyServer extends vscode.TreeItem implements vscode.QuickPickIt
     public jvmOptionFile: string;
     public basePathName: string;
     
-    private _JVM_OPTION_SERVER_CONFIG_PARAM: string = "--server-config=";
-    private _JVM_OPTION_SERVER_CONFIG_DEFAULT_FILE: string = "standalone.xml";
-
     private _state: ServerState = ServerState.IdleServer;
     private _isDebugging: boolean = false;
     private _debugPort: number;
@@ -30,7 +27,6 @@ export class WildflyServer extends vscode.TreeItem implements vscode.QuickPickIt
         super(_name);
         this.label = _name;
         this.jvmOptionFile = path.join(_storagePathParam, Constants.JVM_OPTION_FILE);
-        // this._configurationPath = path.join(_storagePathParam, 'standalone/configuration', 'standalone.xml');
         this.basePathName = path.basename(_storagePathParam);
         this._storagePath = _storagePathParam;
     }
@@ -92,11 +88,11 @@ export class WildflyServer extends vscode.TreeItem implements vscode.QuickPickIt
     public async getServerConfigPath(): Promise<string> {
         const params = await Utility.readFileLineByLine(this.jvmOptionFile, this.filterFunction);
 
-        var file = this._JVM_OPTION_SERVER_CONFIG_DEFAULT_FILE;
+        var file = Constants.JVM_OPTION_SERVER_CONFIG_DEFAULT_FILE;
         for (var index = 0; index < params.length; ++index) {
             const value = params[index];
-            if (value.indexOf(this._JVM_OPTION_SERVER_CONFIG_PARAM) == 0) {
-                file = value.substring(this._JVM_OPTION_SERVER_CONFIG_PARAM.length, value.length);
+            if (value.indexOf(Constants.JVM_OPTION_SERVER_CONFIG_PARAM) == 0) {
+                file = value.substring(Constants.JVM_OPTION_SERVER_CONFIG_PARAM.length, value.length);
                 break;
             }
         }

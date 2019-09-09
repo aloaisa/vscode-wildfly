@@ -78,8 +78,6 @@ export class WildflyController {
         if (warPackage) {
             opn(path.dirname(warPackage.storagePath + '.war'));
         }
-
-
     }
 
     public async addServer(): Promise<WildflyServer> {
@@ -123,7 +121,6 @@ export class WildflyController {
 
             fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options'))
         ]);
-        // await Utility.copyServerConfig(path.join(wildflyInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml'));
         const wildflyServer: WildflyServer = new WildflyServer(serverName, wildflyInstallPath, catalinaBasePath);
         wildflyServer.setDebugPort(8787);
         Utility.trackTelemetryStep('add server');

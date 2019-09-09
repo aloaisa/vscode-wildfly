@@ -28,6 +28,10 @@ export const DEBUG_SESSION_NAME: string = 'Wildfly Debug (Attach)';
 
 export const JVM_DEFAULT_OPTIONS_KEYS: string[] = [CLASS_PATH_KEY, CATALINA_BASE_KEY, CATALINA_HOME_KEY];
 
+export const JVM_OPTION_SERVER_CONFIG_PARAM: string = "--server-config=";
+
+export const JVM_OPTION_SERVER_CONFIG_DEFAULT_FILE: string = "standalone.xml";
+
 export enum ServerState {
     RunningServer = 'runningserver',
     IdleServer = 'idleserver'
