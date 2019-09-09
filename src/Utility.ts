@@ -46,6 +46,40 @@ export namespace Utility {
         });
     }
 
+    export async function executeCMDWithReturn(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<any> {
+        return new Promise(function(resolve, reject) {
+            outputPane.show();
+            let stderr: string = '';
+            let stdout: string = '';
+
+            // Set env variable NOPAUSE if windows
+            if (process.platform === 'win32') {
+                let env = process.env; // Clone
+                env.NOPAUSE = true;
+                options.env = env;
+            }
+
+            const p: child_process.ChildProcess = child_process.spawn(command, args, options);
+            p.stdout.on('data', (data: string | Buffer) => {
+                stdout = stdout.concat(data.toString());
+                resolve(stdout);
+            });
+            p.stderr.on('data', (data: string | Buffer) => {
+                stderr = stderr.concat(data.toString());
+                outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString());
+            });
+            p.on('error', (err: Error) => {
+                reject(err);
+            });
+            p.on('exit', (code: number) => {
+                if (code !== 0) {
+                    reject(new Error(localize('wildflyExt.commandfailed', 'Command failed with exit code {0}', code)));
+                }
+                resolve();
+            });
+        });
+    }
+
     export async function openFile(file: string): Promise<void> {
         if (!await fse.pathExists(file)) {
             throw new Error(localize('wildflyExt.fileNotExist', `File ${file} does not exist.`));

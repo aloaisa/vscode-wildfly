@@ -81,6 +81,10 @@ export class WildflyServer extends vscode.TreeItem implements vscode.QuickPickIt
         this.label = newName;
     }
 
+    public relabel(newLabel: string): void {
+        this.label = newLabel;
+    }
+
     public getInstallPath(): string {
         return this._installPath;
     }

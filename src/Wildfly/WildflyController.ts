@@ -185,6 +185,8 @@ export class WildflyController {
                 stopParameters.push("command=:shutdown");
             }
 
+            server.relabel(server.getName());
+
             await Utility.executeCMD(this._outputChannel, server.getName(), initScript, { shell: true }, ...stopParameters);
         }
     }
@@ -371,7 +373,6 @@ export class WildflyController {
             const warFile = path.basename(webappPath);
 
             await fse.copy(webappPath, deploymentsDirectory + warFile );
-            //await Utility.executeCMD(this._outputChannel, server.getName(), 'cp', { shell: true }, '\"' + webappPath + '\"', '\"' + deploymentsDirectory + warFile + '\"');
         } else {
             Utility.trackTelemetryStep('no war file');
             throw new Error(DialogMessage.invalidWarFile);
@@ -450,6 +451,7 @@ export class WildflyController {
             const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), initScript, { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
+            this.startShowWildlfyUsedMemory(serverInfo);
             await javaProcess;
             serverInfo.setStarted(false);
             watcher.close();
@@ -464,6 +466,64 @@ export class WildflyController {
             vscode.window.showErrorMessage(err.toString());
         }
     }
+
+    private startShowWildlfyUsedMemory(server: WildflyServer) {
+        setTimeout(() => {
+            if (server.isStarted()) {
+                this.showWildlfyUsedMemory(server);
+                this.startShowWildlfyUsedMemory(server);
+            }
+        }, 10000);
+    }
+
+    private async showWildlfyUsedMemory(server: WildflyServer) {
+        if (server) {
+            Utility.trackTelemetryStep('Get used memory');
+
+            let extension: String = 'sh';
+            if (process.platform === 'win32') {
+                extension = 'bat';
+            }
+
+            const initScript: string = '\"' + path.join(server.getStoragePath(), '/bin/jboss-cli.' + extension + '\"');
+            const stopParameters: string[] = ['--connect'];
+            const command: string = 'command=\'/core-service=platform-mbean/type=memory/ :read-attribute(name=heap-memory-usage)\'';
+            stopParameters.push(command);
+
+            // tslint:disable-next-line: no-var-self
+            const that: WildflyController = this;
+            Utility
+                .executeCMDWithReturn(this._outputChannel, server.getName(), initScript, { shell: true }, ...stopParameters)
+                .then(function(result: string) {
+                    that.updateServerUsedMemory(server, result);
+                });
+        }
+    }
+
+    private updateServerUsedMemory(server: WildflyServer, result: string): void {
+        if (result.indexOf('Failed to connect to the controller: Timeout waiting for the system to boot.') !== 0) {
+            // tslint:disable-next-line: no-console
+            const object = result.replace(/\n/g, '');
+
+            const usedResult = object.match(/"used" => [0-9]*L,/)[0];
+            const usedLimit: number = usedResult.length - 2;
+            const usedFound: string = usedResult.substring(10, usedLimit);
+            const usedFoundGb = (parseInt(usedFound) / 1024 /1024 /1024).toPrecision(3);
+            let label: string = server.getName() + ' => ' + usedFoundGb + "Gb";
+
+            const maxResult = object.match(/"max" => [0-9]*L/)[0];
+            const maxLimit = maxResult.length - 1;
+            const maxFound = maxResult.substring(9, maxLimit);
+            const maxFoundGb = (parseInt(maxFound) / 1024 /1024 /1024).toPrecision(3);
+            label = label + ' (' + maxFoundGb + 'Gb)';
+
+            const percent = parseInt(usedFound) * 100 / parseInt(maxFound);
+            label = label + ' (' + Math.round(percent) + '%)';
+            server.relabel(label);
+            vscode.commands.executeCommand('wildfly.tree.refresh');
+        }
+    }
+
     private async precheck(wildflyServer: WildflyServer): Promise<WildflyServer> {
         if (_.isEmpty(this._wildflyModel.getServerSet())) {
             vscode.window.showInformationMessage(DialogMessage.noServer);
