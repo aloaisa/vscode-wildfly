@@ -25,6 +25,10 @@
 * [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) (for debuging war package)
 
 ## Install
+
+- You need npm installed
+- You need JDK and JAVA_HOME configured into your PATH enviroment variable.
+
 1º ```rm -rf node_modues package-lock.json```
 2º ```npm install```
 
